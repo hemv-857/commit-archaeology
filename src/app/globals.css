@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #0c0a09;
+  --color-panel: #161311;
+  --color-panel-2: #1c1917;
+  --color-line: #2c2724;
+  --color-dust: #a8a29e;
+  --color-amber-glow: #fbbf24;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background-color: #0c0a09;
+  color: #e7e5e4;
+  -webkit-font-smoothing: antialiased;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Subtle excavation-site backdrop */
+.site-bg {
+  background-image:
+    radial-gradient(1200px 500px at 50% -10%, rgba(251, 191, 36, 0.09), transparent 60%),
+    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 100% 100%, 44px 44px, 44px 44px;
+}
+
+.panel {
+  background: rgba(22, 19, 17, 0.82);
+  border: 1px solid #2c2724;
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+}
+
+.chip {
+  /* inline-block, not inline-flex: text-overflow: ellipsis only applies to a
+     block box. On a flex container the text is an anonymous flex item, so long
+     paths were hard-clipped mid-word with no ellipsis. */
+  display: inline-block;
+  vertical-align: middle;
+  border: 1px solid #2c2724;
+  background: rgba(28, 25, 23, 0.7);
+  color: #d6d3d1;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+.chip:hover {
+  border-color: #57534e;
+  color: #fbbf24;
+}
+
+.era-band {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.era-band:hover {
+  opacity: 0.85;
+}
+
+.scroll-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: #44403c;
+  border-radius: 4px;
+}
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rise {
+  animation: rise 0.5s ease both;
+}
+
+@keyframes pulse-bar {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.pulse-bar {
+  animation: pulse-bar 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise,
+  .pulse-bar {
+    animation: none;
+  }
+}
