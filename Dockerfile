@@ -10,6 +10,9 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# public/ is gitignored apart from fixtures, so it is absent in a fresh clone
+# (Render builds from git). Create it so the run stage's COPY never hard-fails.
+RUN mkdir -p public
 # GITHUB_API_BASE is overridden at runtime; a dummy value keeps the build hermetic.
 RUN npm run build
 
