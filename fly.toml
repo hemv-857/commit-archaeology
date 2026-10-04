@@ -1,5 +1,7 @@
-# Fly.io deployment (see README → Self-hosting)
-app = "commit-archaeology"
+# Fly.io deployment (see README → Self-hosting).
+# Fly app names are globally unique across all of Fly, so this must carry the
+# owner prefix — a bare "commit-archaeology" will collide with someone else.
+app = "commit-archaeology-hemv857"
 primary_region = "iad"
 
 [build]
