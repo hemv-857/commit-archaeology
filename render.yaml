@@ -1,0 +1,57 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# The web service runs the repo Dockerfile (not a native Next.js preset): this
+# app shells out to `git clone`, which only works where a real git binary and a
+# writable filesystem exist. Render's native Node preset has no git.
+#
+# Deploy:  render.com → New → Blueprint → point at this repo.
+# Or CLI: render blueprint launch   (needs a Render API key)
+
+services:
+  - type: web
+    name: commit-archaeology
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: starter # free tier freezes idle instances and is not enough here
+    region: oregon
+    # The app shells out to git and the container has no git config; this health
+    # check fails loudly if the git binary is missing from the image.
+    healthCheckPath: /api/health
+
+    # Render's container filesystem is ephemeral — without a disk every restart
+    # discards /app/.data, so every cached story would need re-scanning (and the
+    # GitHub rate limit is 60/hour without a token). The disk is the file store.
+    disk:
+      name: story-cache
+      mountPath: /app/.data
+      sizeGB: 5
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /app/.data
+      - key: PUBLIC_BASE_URL
+        # Replace with the public URL after the first deploy.
+        value: https://commit-archaeology.onrender.com
+      - key: PORT
+        value: 10000 # Render injects PORT; the app reads it via next/standalone
+      # Comma-separated pool. Set in the dashboard as a SECRET, never here.
+      - key: GITHUB_TOKENS
+        sync: false
+      # Optional upgrades. Left off by default to keep this to one billable
+      # service; the app falls back to an in-process queue and the file store.
+      # - key: REDIS_URL
+      #   sync: false
+      # - key: DATABASE_URL
+      #   sync: false
+      # - key: SENTRY_DSN
+      #   sync: false
+      # - key: OPENAI_API_KEY
+      #   sync: false
+
+    # A scan clones and analyses a repo; it can outlast a request. This is a
+    # health *check* interval, not a request timeout, but keep it generous
+    # enough that a busy instance is not killed mid-scan.
+    autoDeploy: true

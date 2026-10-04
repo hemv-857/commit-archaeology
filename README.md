@@ -1,5 +1,10 @@
 # Commit Archaeology
 
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=nextdotjs)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](./LICENSE)
+[![Tests](https://img.shields.io/badge/tests-177%20unit%20%2B%2058%20E2E-8b949e?style=flat-square)](#testing)
+
 Turn any public GitHub repository's commit history into a readable narrative: feature
 eras, who broke what, why the ugly code exists, and how risky the bus factor is.
 
@@ -107,6 +112,29 @@ fly launch --copy-config --no-deploy    # fly.toml is ready
 fly secrets set GITHUB_TOKENS=... REDIS_URL=... DATABASE_URL=...
 fly deploy
 ```
+
+### Render
+
+`render.yaml` is a ready Blueprint. In the dashboard: **New → Blueprint** → pick this
+repo → set `GITHUB_TOKENS` → apply.
+
+Two things it deliberately does **not** do, because this app cannot work without them:
+
+- **It does not use Render's native Next.js preset.** The app shells out to `git clone`;
+  the native preset has no git binary. The Blueprint uses the repo `Dockerfile`.
+- **It attaches a persistent disk at `/app/.data`.** Render's container filesystem is
+  ephemeral, so without a disk every restart would discard the story cache and force
+  re-scans — which burns the anonymous GitHub rate limit (60/hour) immediately.
+
+The blueprint deploys a single service (in-process queue + file store). Set
+`REDIS_URL`/`DATABASE_URL` in the dashboard to switch to the BullMQ/Postgres drivers.
+
+### Not Vercel
+
+Vercel is a poor fit here despite the app being Next.js: there is no `git` binary in the
+function runtime, functions are hard-capped at 60s (Hobby) / 300s (Pro) while a scan runs
+for minutes, and the persistent worker plus SSE progress stream do not survive a frozen
+instance. It needs a long-lived Node process with git and a writable `/tmp`.
 
 ## Architecture notes
 
