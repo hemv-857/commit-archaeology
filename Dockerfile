@@ -29,8 +29,11 @@ COPY --from=build /app/public ./public
 RUN mkdir -p /app/.data && chown -R app:app /app
 USER app
 EXPOSE 3000
+# Must follow $PORT, not a hardcoded 3000: Render, Fly and most PaaS inject
+# their own PORT, so a fixed port here kills the container with exit 1 on the
+# first health probe and the deploy fails.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD curl -fsS http://127.0.0.1:3000/api/health || exit 1
+  CMD curl -fsS "http://127.0.0.1:${PORT:-3000}/api/health" || exit 1
 CMD ["node", "server.js"]
 
 # ---- run (dedicated scan worker; docker compose --profile scale) ----
