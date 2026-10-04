@@ -13,7 +13,30 @@ COPY . .
 # GITHUB_API_BASE is overridden at runtime; a dummy value keeps the build hermetic.
 RUN npm run build
 
+# ---- run (dedicated scan worker; docker compose --profile scale) ----
+# NOTE: this stage MUST stay above the `run` stage. Render (and other PaaS
+# builders) deploy the LAST stage in the file, so a trailing worker stage ships
+# the worker image as the web service — which then boots `npm run worker` and
+# exits 1 without REDIS_URL.
+FROM node:22-alpine AS worker
+WORKDIR /app
+RUN apk add --no-cache git && addgroup -S app && adduser -S app -G app
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    DATA_DIR=/app/.data
+COPY --from=deps /app/node_modules ./node_modules
+# package.json is required: the CMD below resolves the `worker` script via npm.
+COPY package.json ./
+COPY tsconfig.json ./
+COPY src ./src
+# The worker runs src only — drop the web build's devDependencies from the image.
+RUN npm prune --omit=dev \
+ && mkdir -p /app/.data && chown -R app:app /app
+USER app
+CMD ["npm", "run", "worker"]
+
 # ---- run (web) ----
+# Keep LAST: this is the stage every PaaS builder ships as the web service.
 FROM node:22-alpine AS run
 WORKDIR /app
 RUN apk add --no-cache git curl && addgroup -S app && adduser -S app -G app
@@ -35,21 +58,3 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD curl -fsS "http://127.0.0.1:${PORT:-3000}/api/health" || exit 1
 CMD ["node", "server.js"]
-
-# ---- run (dedicated scan worker; docker compose --profile scale) ----
-FROM node:22-alpine AS worker
-WORKDIR /app
-RUN apk add --no-cache git && addgroup -S app && adduser -S app -G app
-ENV NODE_ENV=production \
-    NEXT_TELEMETRY_DISABLED=1 \
-    DATA_DIR=/app/.data
-COPY --from=deps /app/node_modules ./node_modules
-# package.json is required: the CMD below resolves the `worker` script via npm.
-COPY package.json ./
-COPY tsconfig.json ./
-COPY src ./src
-# The worker runs src only — drop the web build's devDependencies from the image.
-RUN npm prune --omit=dev \
- && mkdir -p /app/.data && chown -R app:app /app
-USER app
-CMD ["npm", "run", "worker"]
