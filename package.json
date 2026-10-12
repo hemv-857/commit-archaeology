@@ -20,7 +20,7 @@
     "fixture:repos": "tsx tests/fixtures/make-fixture-repos.ts"
   },
   "dependencies": {
-    "@sentry/nextjs": "^10.0.0",
+    "@sentry/nextjs": "^11.6.0",
     "bullmq": "^5.34.0",
     "drizzle-orm": "^0.45.3",
     "ioredis": "^5.6.0",
