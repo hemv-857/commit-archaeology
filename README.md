@@ -158,6 +158,10 @@ host, scheme, port and userinfo are re-checked after parsing. Route handlers rec
 raw path params rather than a typed URL, so they validate independently before those
 segments become filesystem paths.
 
-## License
+## Contributing
 
-MIT
+Open a PR. CI runs on every push and pull request and must be green before merge ([workflow](.github/workflows/ci.yml)).
+
+Keep commits conventional — `type: description`.
+
+#
